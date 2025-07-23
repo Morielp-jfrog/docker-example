@@ -20,23 +20,27 @@ jobs:
 
           # JFrog Platform access token
           JF_ACCESS_TOKEN: ${{ secrets.RT_ACCESS_TOKEN }}
+          DOCKER_IMAGE_NAME: $JF_URL/morielp-docker-local/hello-frog:1.0.0
+          JFROG_CLI_BUILD_NAME: myBuild
+          JFROG_CLI_BUILD_NUMBER: 1
          
 
           # Basic authentication credentials
           ## JF_USER: ${{ secrets.JF_USER }}
           ## JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          tags: myBuild:1  
 
       - name: Run JFrog CLI
         run: |
           # Ping the server
           jf rt ping
           # Collect environment variables for the build
-          jf c add --url= ${{ secrets.RT_URL }}
-          jf npm-config --repo-resolve=morielp-npm --repo-deploy=morielp-npm
-          jf npm install
-          jf rt bce 
-          # Collect VCS details from git and add them to the build
-          jf rt bag 
+          jf docker scan
           jf audit --watches "all_cves"
           # Publish build info
           jf rt bp 
