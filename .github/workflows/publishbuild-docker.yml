@@ -1,0 +1,43 @@
+name: "test-docker-build"
+on: 
+  #push:
+  #  branches:
+  #    - main
+  workflow_dispatch: # The repository will be scanned on demand
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          # JFrog platform url (for example: https://acme.jfrog.io)
+          JF_URL: ${{ secrets.RT_URL }}
+
+          # JFrog Platform access token
+          JF_ACCESS_TOKEN: ${{ secrets.RT_ACCESS_TOKEN }}
+         
+
+          # Basic authentication credentials
+          ## JF_USER: ${{ secrets.JF_USER }}
+          ## JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
+
+      - name: Run JFrog CLI
+        run: |
+          # Ping the server
+          jf rt ping
+          # Collect environment variables for the build
+          jf c add --url= ${{ secrets.RT_URL }}
+          jf npm-config --repo-resolve=morielp-npm --repo-deploy=morielp-npm
+          jf npm install
+          jf rt bce 
+          # Collect VCS details from git and add them to the build
+          jf rt bag 
+          jf audit --watches "all_cves"
+          # Publish build info
+          jf rt bp 
+          jf bs 
